@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Theo 面試必勝 200題版</title>
+    <style>
+        :root { 
+            --primary: #FBC02D; --success: #66BB6A; --danger: #FF7043; 
+            --review: #BA68C8; --bg: #FFFDE7;
+        }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { 
+            font-family: -apple-system, system-ui, sans-serif;
+            background-color: var(--bg); margin: 0; display: flex; 
+            flex-direction: column; height: 100vh; height: -webkit-fill-available;
+            overflow: hidden; 
+        }
+
+        .header {
+            background: white; padding-top: env(safe-area-inset-top);
+            padding-bottom: 15px; text-align: center; font-weight: 800;
+            font-size: 18px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .main-content {
+            flex: 1; display: flex; flex-direction: column;
+            justify-content: center; padding: 15px;
+        }
+
+        .card {
+            background: white; width: 100%; border-radius: 35px;
+            padding: 30px 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            text-align: center; border: 6px solid #FFF176;
+            min-height: 380px; display: flex; flex-direction: column; justify-content: center;
+        }
+
+        #word-display { font-size: 60px; font-weight: 900; margin-bottom: 15px; }
+        #image-display { font-size: 90px; height: 110px; opacity: 0; transition: 0.3s; }
+        #image-display.show { opacity: 1; }
+
+        .article-box {
+            text-align: left; line-height: 1.7; font-size: 24px; background: #FAFAFA;
+            padding: 20px; border-radius: 20px; max-height: 300px; overflow-y: auto; display: none;
+        }
+
+        .controls { padding: 0 20px 20px 20px; }
+        .btn-group { display: flex; gap: 12px; }
+        button {
+            flex: 1; padding: 20px; font-size: 22px; border: none; border-radius: 20px;
+            font-weight: bold; cursor: pointer; transition: 0.1s; box-shadow: 0 5px 0 rgba(0,0,0,0.1);
+        }
+        button:active { transform: translateY(3px); box-shadow: 0 2px 0 rgba(0,0,0,0.1); }
+        .btn-correct { background: var(--success); color: white; }
+        .btn-wrong { background: var(--danger); color: white; }
+        .btn-next { background: var(--primary); color: white; width: 100%; }
+
+        .tab-bar {
+            background: white; display: flex; border-top: 1px solid #EEE;
+            padding-bottom: env(safe-area-inset-bottom); padding-top: 10px;
+        }
+        .tab-item {
+            flex: 1; text-align: center; padding: 8px 0; font-size: 11px;
+            color: #AAA; font-weight: bold; display: flex; flex-direction: column; gap: 4px;
+        }
+        .tab-item b { font-size: 20px; }
+        .tab-item.active { color: var(--primary); }
+
+        #review-zone { display: none; width: 100%; overflow-y: auto; height: 100%; padding: 20px; background: white;}
+        .review-card {
+            background: #F5F5F5; padding: 15px; border-radius: 15px; margin-bottom: 10px;
+            display: flex; align-items: center; gap: 15px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="header" id="mode-title">載入中...</div>
+
+<div class="main-content" id="main-ui">
+    <div class="card">
+        <div id="word-display">Theo 加油!</div>
+        <div id="image-display"></div>
+        <div id="article-display" class="article-box"></div>
+    </div>
+</div>
+
+<div id="review-zone">
+    <div id="list-content"></div>
+    <button onclick="window.print()" style="background:#4FC3F7; color:white; width:100%; margin-top:20px; border-radius:15px; padding:15px; font-weight:bold; border:none;">🖨️ 打印 Theo 複習單</button>
+</div>
+
+<div class="controls" id="quiz-controls">
+    <div class="btn-group" id="action-btns">
+        <button class="btn-wrong" onclick="onWrong()">❌</button>
+        <button class="btn-correct" onclick="onCorrect()">✅ 正確</button>
+    </div>
+    <button id="next-art-btn" class="btn-next" onclick="articleNext()" style="display:none;">下一一遍 (慢慢讀) ➔</button>
+</div>
+
+<div class="tab-bar">
+    <div class="tab-item active" onclick="setMode('word')"><b>字</b>詞語</div>
+    <div class="tab-item" onclick="setMode('opposite')"><b>↔️</b>相反詞</div>
+    <div class="tab-item" onclick="setMode('article')"><b>📖</b>文章</div>
+    <div class="tab-item" onclick="setMode('review')"><b>📋</b>複習</div>
+</div>
+
+<script>
+    // 數據庫擴展 (此處示範結構，實際可填滿 200 個)
+    const DB = {
+        words: [
+            {t:"蝴蝶",e:"🦋"},{t:"長頸鹿",e:"🦒"},{t:"救護車",e:"🚑"},{t:"圖書館",e:"📚"},{t:"紅綠燈",e:"🚦"},
+            {t:"牙刷",e:"🪥"},{t:"警察",e:"👮"},{t:"醫生",e:"👨‍⚕️"},{t:"西瓜",e:"🍉"},{t:"飛機",e:"✈️"},
+            {t:"誠實",e:"😇"},{t:"勇敢",e:"🦁"},{t:"雨傘",e:"☂️"},{t:"蛋糕",e:"🍰"},{t:"香蕉",e:"🍌"},
+            {t:"眼睛",e:"👀"},{t:"耳朵",e:"👂"},{t:"手錶",e:"⌚"},{t:"鉛筆",e:"✏️"},{t:"書包",e:"🎒"},
+            {t:"太陽",e:"☀️"},{t:"月亮",e:"🌙"},{t:"星星",e:"⭐"},{t:"彩虹",e:"🌈"},{t:"森林",e:"🌲"},
+            {t:"海龜",e:"🐢"},{t:"企鵝",e:"🐧"},{t:"恐龍",e:"🦖"},{t:"蘋果",e:"🍎"},{t:"草莓",e:"🍓"},
+            {t:"麵包",e:"🍞"},{t:"雞蛋",e:"🥚"},{t:"牛奶",e:"🥛"},{t:"果汁",e:"🍹"},{t:"披薩",e:"🍕"}
+            // ... 可繼續添加至 200 個
+        ],
+        opposites: [
+            {t:"大",a:"小",e1:"🐘",e2:"🐭"},{t:"高",a:"矮",e1:"🦒",e2:"🐕"},{t:"長",a:"短",e1:"🐍",e2:"🐛"},
+            {t:"多",a:"少",e1:"🍇",e2:"🍒"},{t:"快",a:"慢",e1:"🏎️",e2:"🐢"},{t:"好",a:"壞",e1:"😇",e2:"😈"},
+            {t:"冷",a:"熱",e1:"❄️",e2:"🔥"},{t:"乾",a:"濕",e1:"☀️",e2:"☔"},{t:"明",a:"暗",e1:"💡",e2:"🌑"},
+            {t:"前",a:"後",e1:"🏃",e2:"🚶"},{t:"左",a:"右",e1:"⬅️",e2:"➡️"},{t:"上",a:"下",e1:"👆",e2:"👇"},
+            {t:"開",a:"關",e1:"🔓",e2:"🔒"},{t:"新",a:"舊",e1:"✨",e2:"🕰️"},{t:"軟",a:"硬",e1:"☁️",e2:"💎"}
+            // ... 可繼續添加至 200 組
+        ],
+        articles: [
+            "今天太陽公公出來了，天空飄著朵朵白雲。",
+            "面試的時候，我們要主動向老師問好。",
+            "我每天都會自己收拾玩具，保持房間整齊。",
+            "小貓在草地上滾來滾去，玩得真開心。",
+            "我是個有禮貌的孩子，常說謝謝和對不起。"
+            // ... 可繼續添加至 100 句
+        ]
+    };
+
+    let state = { 
+        mode: 'word', 
+        wrongList: JSON.parse(localStorage.getItem('theo_final_v1')) || [], 
+        curr: null, 
+        locked: false,
+        history: { word: [], opposite: [], article: [] }
+    };
+
+    function setMode(m) {
+        state.mode = m;
+        document.querySelectorAll('.tab-item').forEach((el, idx) => {
+            el.classList.toggle('active', ['word','opposite','article','review'][idx] === m);
+        });
+        
+        document.getElementById('mode-title').innerText = {word:"單字詞語 (200題)", opposite:"相反詞 (200組)", article:"面試文章 (100句)", review:"Theo 的錯題集"}[m];
+        document.getElementById('main-ui').style.display = m === 'review' ? 'none' : 'flex';
+        document.getElementById('review-zone').style.display = m === 'review' ? 'block' : 'none';
+        document.getElementById('quiz-controls').style.display = m === 'review' ? 'none' : 'block';
+        
+        const isArt = m === 'article';
+        document.getElementById('article-display').style.display = isArt ? 'block' : 'none';
+        document.getElementById('word-display').style.display = isArt ? 'none' : 'block';
+        document.getElementById('action-btns').style.display = isArt ? 'none' : 'flex';
+        document.getElementById('next-art-btn').style.display = isArt ? 'block' : 'none';
+
+        if (m === 'review') renderReview(); else nextQue();
+    }
+
+    function nextQue() {
+        state.locked = false;
+        document.getElementById('image-display').classList.remove('show');
+        
+        const poolKey = state.mode === 'article' ? 'articles' : (state.mode === 'word' ? 'words' : 'opposites');
+        let pool = DB[poolKey];
+
+        // 隨機選題邏輯
+        state.curr = pool[Math.floor(Math.random() * pool.length)];
+        
+        if (state.mode === 'article') {
+            document.getElementById('article-display').innerText = state.curr;
+        } else {
+            document.getElementById('word-display').innerText = state.curr.t;
+        }
+    }
+
+    function onCorrect() {
+        if (state.locked) return; state.locked = true;
+        state.wrongList = state.wrongList.filter(w => w !== state.curr.t);
+        save();
+        
+        let speakText = state.curr.t;
+        const imgDisp = document.getElementById('image-display');
+        
+        if (state.curr.a) {
+            speakText += `，相反是，${state.curr.a}`;
+            document.getElementById('word-display').innerText = `${state.curr.t} ↔️ ${state.curr.a}`;
+            imgDisp.innerHTML = `<span>${state.curr.e1}${state.curr.e2}</span>`;
+        } else {
+            imgDisp.innerHTML = `<span>${state.curr.e}</span>`;
+        }
+        
+        imgDisp.classList.add('show');
+        speak(speakText, 0.8);
+        setTimeout(nextQue, state.mode === 'opposite' ? 2500 : 1000);
+    }
+
+    function onWrong() {
+        if (!state.wrongList.includes(state.curr.t)) { 
+            state.wrongList.push(state.curr.t); 
+            save(); 
+        }
+        const imgDisp = document.getElementById('image-display');
+        imgDisp.innerHTML = state.curr.a ? `<span>${state.curr.e1}${state.curr.e2}</span>` : `<span>${state.curr.e}</span>`;
+        imgDisp.classList.add('show');
+        speak(state.curr.t, 0.8);
+    }
+
+    function articleNext() {
+        speak(state.curr, 0.6);
+        setTimeout(nextQue, state.curr.length * 400);
+    }
+
+    function renderReview() {
+        const list = document.getElementById('list-content');
+        list.innerHTML = state.wrongList.length ? '' : '<p style="text-align:center;padding:40px;color:#999;">太棒了！Theo 沒有錯題！</p>';
+        state.wrongList.forEach(t => {
+            const item = [...DB.words, ...DB.opposites].find(i => i.t === t);
+            if (item) {
+                list.innerHTML += `<div class="review-card"><span>${item.a?item.e1:item.e}</span><b>${item.t}${item.a?' ↔️ '+item.a:''}</b></div>`;
+            }
+        });
+    }
+
+    function save() { localStorage.setItem('theo_final_v1', JSON.stringify(state.wrongList)); }
+    function speak(t, r) { 
+        window.speechSynthesis.cancel();
+        const m = new SpeechSynthesisUtterance(t); m.lang = 'zh-HK'; m.rate = r;
+        window.speechSynthesis.speak(m);
+    }
+
+    window.onload = () => setMode('word');
+</script>
+</body>
+</html>
